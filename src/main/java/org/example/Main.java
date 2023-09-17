@@ -1,5 +1,6 @@
 package org.example;
 
+import java.math.BigInteger;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -8,32 +9,60 @@ public class Main {
 
     private static final String INPUT = """
 Monkey 0:
-  Starting items: 79, 98
-  Operation: new = old * 19
-  Test: divisible by 23
-    If true: throw to monkey 2
+  Starting items: 54, 89, 94
+  Operation: new = old * 7
+  Test: divisible by 17
+    If true: throw to monkey 5
     If false: throw to monkey 3
 
 Monkey 1:
-  Starting items: 54, 65, 75, 74
-  Operation: new = old + 6
-  Test: divisible by 19
-    If true: throw to monkey 2
-    If false: throw to monkey 0
-
-Monkey 2:
-  Starting items: 79, 60, 97
-  Operation: new = old * old
-  Test: divisible by 13
-    If true: throw to monkey 1
+  Starting items: 66, 71
+  Operation: new = old + 4
+  Test: divisible by 3
+    If true: throw to monkey 0
     If false: throw to monkey 3
 
+Monkey 2:
+  Starting items: 76, 55, 80, 55, 55, 96, 78
+  Operation: new = old + 2
+  Test: divisible by 5
+    If true: throw to monkey 7
+    If false: throw to monkey 4
+
 Monkey 3:
-  Starting items: 74
-  Operation: new = old + 3
-  Test: divisible by 17
+  Starting items: 93, 69, 76, 66, 89, 54, 59, 94
+  Operation: new = old + 7
+  Test: divisible by 7
+    If true: throw to monkey 5
+    If false: throw to monkey 2
+
+Monkey 4:
+  Starting items: 80, 54, 58, 75, 99
+  Operation: new = old * 17
+  Test: divisible by 11
+    If true: throw to monkey 1
+    If false: throw to monkey 6
+
+Monkey 5:
+  Starting items: 69, 70, 85, 83
+  Operation: new = old + 8
+  Test: divisible by 19
+    If true: throw to monkey 2
+    If false: throw to monkey 7
+
+Monkey 6:
+  Starting items: 89
+  Operation: new = old + 6
+  Test: divisible by 2
     If true: throw to monkey 0
     If false: throw to monkey 1
+
+Monkey 7:
+  Starting items: 62, 80, 58, 57, 93, 56
+  Operation: new = old * old
+  Test: divisible by 13
+    If true: throw to monkey 6
+    If false: throw to monkey 4
 """;
 
     public static void main(String[] args) {
@@ -53,16 +82,19 @@ Monkey 3:
         // probably due to int max
         MonkeyOperation monkeyOperation2 = new MonkeyOperation(INPUT, false);
         for (int i = 0; i < 10000; i++) {
+//            if (i == 1000) {
+//                int k = 0;
+//            }
+//            System.out.println("For round " + i + ", monkey 0 has " + monkeyOperation2.getMonkeys().get(0).getInspectCount() + ", monkey 1 has " + monkeyOperation2.getMonkeys().get(1).getInspectCount() + ", monkey 2 has " + monkeyOperation2.getMonkeys().get(2).getInspectCount() + ", monkey 3 has " + monkeyOperation2.getMonkeys().get(3).getInspectCount());
             for (Monkey monkey : monkeyOperation2.getMonkeys()) {
                 monkeyOperation2.inspect(monkeyOperation2.getMonkeys().indexOf(monkey));
             }
-            if (i == 0 || i == 19 || i == 999 || i == 1999 || i == 2999) {
-                int j = 0;
-            }
+
         }
 
         monkeyOperation2.monkeys.sort(Comparator.comparing(Monkey::getInspectCount).reversed());
-        int total2 = monkeyOperation2.getMonkeys().get(0).getInspectCount() * monkeyOperation2.getMonkeys().get(1).getInspectCount();
+//        int total2 = monkeyOperation2.getMonkeys().get(0).getInspectCount() * monkeyOperation2.getMonkeys().get(1).getInspectCount();
+        BigInteger total2 = BigInteger.valueOf(monkeyOperation2.getMonkeys().get(0).getInspectCount()).multiply(BigInteger.valueOf(monkeyOperation2.getMonkeys().get(1).getInspectCount()));
         System.out.println("Answer part 2 : " + total2);
     }
 
@@ -80,18 +112,33 @@ Monkey 3:
 
          public  void inspect(int index) {
             Monkey monkey = monkeys.get(index);
-            for (int item : monkey.getItems()) {
+            for (long item : monkey.getItems()) {
                 monkey.addInspectCount();
-                int afterOperate = monkey.doOperation(item);
-                int dividedBy3 = afterOperate;
+                long afterOperate = monkey.doOperation(item);
                 if (shouldDivideBy3) {
-                    dividedBy3 = afterOperate / 3;
-                }
-                if (monkey.isDividedBy(dividedBy3)) {
-                    monkeys.get(monkey.getTrueThenPassTo()).addItem(dividedBy3);
+                    afterOperate = afterOperate / 3;
+                    if (monkey.isDividedBy(afterOperate)) {
+                        monkeys
+                                .get(monkey.getTrueThenPassTo())
+                                .addItem(afterOperate);
+                    } else {
+                        monkeys
+                                .get(monkey.getFalseThenPastTo())
+                                .addItem(afterOperate);
+                    }
                 } else {
-                    monkeys.get(monkey.getFalseThenPastTo()).addItem(dividedBy3);
+                    afterOperate %= 9699690;
+                    if (monkey.isDividedBy(afterOperate)) {
+                        monkeys
+                                .get(monkey.getTrueThenPassTo())
+                                .addItem(afterOperate);
+                    } else {
+                        monkeys
+                                .get(monkey.getFalseThenPastTo())
+                                .addItem(afterOperate);
+                    }
                 }
+
             }
             monkey.clearItems();
         }
@@ -111,7 +158,7 @@ Monkey 3:
                     String[] items = parse.split(",");
                     for (String item : items) {
                         item = item.replaceAll("\\s", "");
-                        currentMonkey.addItem(Integer.parseInt(item));
+                        currentMonkey.addItem(Long.parseLong(item));
                     }
                 } else if (line.contains("Operation:")) {
                     String parse = line.substring(line.indexOf("=") + 2);
@@ -137,7 +184,7 @@ Monkey 3:
 
 
     static class Monkey{
-        private List<Integer> items = new ArrayList<>();
+        private List<Long> items = new ArrayList<>();
         // Example:old * 7
         private String operation;
         private int divideBy;
@@ -164,11 +211,11 @@ Monkey 3:
             this.falseThenPastTo = falseThenPastTo;
         }
 
-        public List<Integer> getItems() {
+        public List<Long> getItems() {
             return items;
         }
 
-        public void addItem(Integer item) {
+        public void addItem(Long item) {
             items.add(item);
         }
 
@@ -184,19 +231,19 @@ Monkey 3:
             return falseThenPastTo;
         }
 
-        public Integer doOperation(Integer item) {
+        public Long doOperation(Long item) {
             String statement = operation.replace("old", item.toString());
             String[] units = statement.split(" ");
             switch (units[1]) {
                 case "+":
-                    return Integer.parseInt(units[0]) + Integer.parseInt(units[2]);
+                    return Long.parseLong(units[0]) + Long.parseLong(units[2]);
                 case "*":
-                    return Integer.parseInt(units[0]) * Integer.parseInt(units[2]);
+                    return Long.parseLong(units[0]) * Long.parseLong(units[2]);
             }
             throw new UnsupportedOperationException("Operation not supported");
         }
 
-        public boolean isDividedBy(int num) {
+        public boolean isDividedBy(long num) {
             return num % divideBy == 0;
         }
 
